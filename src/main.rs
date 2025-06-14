@@ -1,4 +1,7 @@
+mod vector_3;
+
 use image::{ImageBuffer, ImageFormat, Rgb};
+use vector_3::Vector3;
 
 fn main() {
     let image_width = 256;
@@ -10,7 +13,12 @@ fn main() {
         println!("Scanlines remaining: {}", image_height - row_y);
 
         for (x, y, pixel) in row {
-            *pixel = Rgb([x as u8, y as u8, 0]);
+            let color = Vector3::new(
+                x as f64 / image_width as f64,
+                y as f64 / image_height as f64,
+                0.0,
+            );
+            *pixel = color.into();
         }
     }
 
