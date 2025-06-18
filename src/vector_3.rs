@@ -119,11 +119,35 @@ impl Mul<Vector3> for Vector3 {
     }
 }
 
+impl Mul<u32> for Vector3 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: u32) -> Self::Output {
+        Self([
+            self[0] * rhs as f64,
+            self[1] * rhs as f64,
+            self[2] * rhs as f64,
+        ])
+    }
+}
+
 impl Mul<f64> for Vector3 {
     type Output = Vector3;
 
     fn mul(self, rhs: f64) -> Self::Output {
         Self([self[0] * rhs, self[1] * rhs, self[2] * rhs])
+    }
+}
+
+impl Mul<Vector3> for u32 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: Vector3) -> Self::Output {
+        Vector3([
+            rhs[0] * self as f64,
+            rhs[1] * self as f64,
+            rhs[2] * self as f64,
+        ])
     }
 }
 
