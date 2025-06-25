@@ -1,8 +1,14 @@
+mod hittable;
+mod hittable_list;
 mod ray;
+mod sphere;
 mod vector_3;
 
+use hittable::Hittable;
+use hittable_list::HittableList;
 use image::{ImageBuffer, ImageFormat, Rgb};
 use ray::Ray;
+use sphere::Sphere;
 use vector_3::{Color, Point3, Vector3};
 
 fn main() {
@@ -16,6 +22,11 @@ fn main() {
     };
 
     let actual_aspect_ratio = image_width as f64 / image_height as f64;
+
+    // World
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera Stuff
     let focal_length = 1.0;
@@ -45,7 +56,7 @@ fn main() {
             let pixel_center = upper_left_pixel_center + x * pixel_delta_u + y * pixel_delta_v;
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
-            let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color(&ray, &world);
             *pixel = pixel_color.into();
         }
     }
@@ -53,22 +64,12 @@ fn main() {
     img.save_with_format("out.png", ImageFormat::Png).unwrap();
 }
 
-fn ray_color(ray: &Ray) -> Color {
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
-        Color::new(1.0, 0.0, 0.0)
+fn ray_color(ray: &Ray, world: &impl Hittable) -> Color {
+    if let Some(hit_record) = world.hit(ray, 0.0..f64::INFINITY) {
+        0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0))
     } else {
         let unit_direction = ray.direction.unit_vector();
         let a = 0.5 * (unit_direction.y() + 1.0);
         (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
-}
-
-fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> bool {
-    let oc = *center - ray.origin;
-    let a = ray.direction.dot(ray.direction);
-    let b = -2.0 * ray.direction.dot(oc);
-    let c = oc.dot(oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-
-    discriminant >= 0.0
 }
