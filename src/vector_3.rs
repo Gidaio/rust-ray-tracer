@@ -5,7 +5,7 @@ use std::{
 
 use image::Rgb;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Vector3([f64; 3]);
 
 pub type Color = Vector3;
