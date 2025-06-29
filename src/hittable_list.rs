@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
 use crate::{
     hittable::{HitRecord, Hittable},
@@ -22,12 +22,12 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, ray_t: Range<f64>) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: RangeInclusive<f64>) -> Option<HitRecord> {
         let mut closest_record = None;
-        let mut closest_t = ray_t.end;
+        let mut closest_t = *ray_t.end();
 
         for obj in self.0.iter() {
-            if let Some(closest) = obj.hit(ray, ray_t.start..closest_t) {
+            if let Some(closest) = obj.hit(ray, *ray_t.start()..=closest_t) {
                 closest_t = closest.t;
                 closest_record = Some(closest);
             }

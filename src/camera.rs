@@ -10,8 +10,10 @@ use crate::{
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: u32,
+    pub samples_per_pixel: u32,
 
     image_height: u32,
+    pixel_samples_scale: f64,
     center: Point3,
     upper_left_pixel_center: Point3,
     pixel_delta_u: Vector3,
@@ -28,12 +30,14 @@ impl Camera {
             println!("Scanlines remaining: {}", self.image_height - row_y);
 
             for (x, y, pixel) in row {
-                let pixel_center =
-                    self.upper_left_pixel_center + x * self.pixel_delta_u + y * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-                let pixel_color = Self::ray_color(&ray, world);
-                *pixel = pixel_color.into();
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    pixel_color += Self::ray_color(&ray, world);
+                }
+
+                *pixel = (pixel_color * self.pixel_samples_scale).into();
             }
         }
 
@@ -46,6 +50,8 @@ impl Camera {
             let height = (self.image_width as f64 / self.aspect_ratio).floor() as u32;
             if height < 1 { 1 } else { height }
         };
+
+        self.pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
 
         let actual_aspect_ratio = self.image_width as f64 / self.image_height as f64;
 
@@ -72,8 +78,26 @@ impl Camera {
             viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
+    fn get_ray(&self, x: u32, y: u32) -> Ray {
+        let offset = Self::sample_square();
+
+        let pixel_sample = self.upper_left_pixel_center
+            + ((x as f64 + offset.x()) * self.pixel_delta_u)
+            + ((y as f64 + offset.y()) * self.pixel_delta_v);
+
+        Ray::new(self.center, pixel_sample - self.center)
+    }
+
+    fn sample_square() -> Vector3 {
+        Vector3::new(
+            rand::random::<f64>() - 0.5,
+            rand::random::<f64>() - 0.5,
+            0.0,
+        )
+    }
+
     fn ray_color(ray: &Ray, world: &impl Hittable) -> Color {
-        if let Some(hit_record) = world.hit(ray, 0.0..f64::INFINITY) {
+        if let Some(hit_record) = world.hit(ray, 0.0..=f64::INFINITY) {
             0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0))
         } else {
             let unit_direction = ray.direction.unit_vector();
