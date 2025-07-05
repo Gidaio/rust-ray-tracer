@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub},
 };
 
 use image::Rgb;
@@ -13,7 +13,39 @@ pub type Point3 = Vector3;
 
 impl Vector3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vector3([x, y, z])
+        Self([x, y, z])
+    }
+
+    pub fn random() -> Self {
+        Self([rand::random(), rand::random(), rand::random()])
+    }
+
+    pub fn random_range(range: Range<f64>) -> Self {
+        Self([
+            rand::random_range(range.clone()),
+            rand::random_range(range.clone()),
+            rand::random_range(range),
+        ])
+    }
+
+    pub fn random_unit() -> Self {
+        loop {
+            let p = Self::random_range(-1.0..1.0);
+            let length_squared = p.length_squared();
+            if length_squared >= f64::MIN_POSITIVE && length_squared <= 1.0 {
+                break p / length_squared.sqrt();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: &Vector3) -> Self {
+        let unit_vector = Self::random_unit();
+
+        if unit_vector.dot(*normal) > 0.0 {
+            unit_vector
+        } else {
+            -unit_vector
+        }
     }
 
     pub fn x(&self) -> f64 {
@@ -28,16 +60,16 @@ impl Vector3 {
         self[2]
     }
 
-    pub fn r(&self) -> u8 {
-        (self[0] * 256.0).clamp(0.0, 255.0) as u8
+    pub fn r(&self) -> f64 {
+        self[0]
     }
 
-    pub fn g(&self) -> u8 {
-        (self[1] * 256.0).clamp(0.0, 255.0) as u8
+    pub fn g(&self) -> f64 {
+        self[1]
     }
 
-    pub fn b(&self) -> u8 {
-        (self[2] * 256.0).clamp(0.0, 255.0) as u8
+    pub fn b(&self) -> f64 {
+        self[2]
     }
 
     pub fn length(&self) -> f64 {
@@ -191,6 +223,22 @@ impl Display for Vector3 {
 
 impl From<Vector3> for Rgb<u8> {
     fn from(value: Vector3) -> Self {
-        Rgb([value.r(), value.g(), value.b()])
+        let r = linear_to_gamma(value.r());
+        let g = linear_to_gamma(value.g());
+        let b = linear_to_gamma(value.b());
+
+        Rgb([
+            (r * 256.0).clamp(0.0, 255.0) as u8,
+            (g * 256.0).clamp(0.0, 255.0) as u8,
+            (b * 256.0).clamp(0.0, 255.0) as u8,
+        ])
+    }
+}
+
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    if linear_component > 0.0 {
+        linear_component.sqrt()
+    } else {
+        0.0
     }
 }
