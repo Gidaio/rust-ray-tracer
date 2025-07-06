@@ -98,7 +98,7 @@ impl Camera {
     }
 
     fn ray_color(ray: &Ray, depth: usize, world: &impl Hittable) -> Color {
-        if depth <= 0 {
+        if depth == 0 {
             Color::new(0.0, 0.0, 0.0)
         } else if let Some(hit_record) = world.hit(ray, 0.001..=f64::INFINITY) {
             if let Some((attenuation, scattered)) = hit_record.material.scatter(ray, &hit_record) {

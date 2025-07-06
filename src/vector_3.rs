@@ -32,13 +32,13 @@ impl Vector3 {
         loop {
             let p = Self::random_range(-1.0..1.0);
             let length_squared = p.length_squared();
-            if length_squared >= f64::MIN_POSITIVE && length_squared <= 1.0 {
+            if (f64::MIN_POSITIVE..=1.0).contains(&length_squared) {
                 break p / length_squared.sqrt();
             }
         }
     }
 
-    pub fn random_on_hemisphere(normal: &Vector3) -> Self {
+    pub fn random_on_hemisphere(normal: &Self) -> Self {
         let unit_vector = Self::random_unit();
 
         if unit_vector.dot(*normal) > 0.0 {
@@ -48,8 +48,16 @@ impl Vector3 {
         }
     }
 
-    pub fn reflect(&self, normal: Vector3) -> Vector3 {
+    pub fn reflect(&self, normal: Self) -> Self {
         *self - 2.0 * self.dot(normal) * normal
+    }
+
+    pub fn refract(self, normal: Self, refraction_ratio: f64) -> Self {
+        let cos_theta = (-self).dot(normal).min(1.0);
+        let out_perpendicular = refraction_ratio * (self + cos_theta * normal);
+        let out_parallel = -(1.0 - out_perpendicular.length_squared()).abs().sqrt() * normal;
+
+        out_perpendicular + out_parallel
     }
 
     pub fn x(&self) -> f64 {
@@ -89,11 +97,11 @@ impl Vector3 {
         self[0].abs() < epsilon && self[1].abs() < epsilon && self[2].abs() < epsilon
     }
 
-    pub fn dot(self, rhs: Vector3) -> f64 {
+    pub fn dot(self, rhs: Self) -> f64 {
         self[0] * rhs[0] + self[1] * rhs[1] + self[2] * rhs[2]
     }
 
-    pub fn cross(self, rhs: Vector3) -> Vector3 {
+    pub fn cross(self, rhs: Self) -> Self {
         Self([
             self[1] * rhs[2] - self[2] * rhs[1],
             self[2] * rhs[0] - self[0] * rhs[2],
@@ -101,7 +109,7 @@ impl Vector3 {
         ])
     }
 
-    pub fn unit_vector(self) -> Vector3 {
+    pub fn unit_vector(self) -> Self {
         self / self.length()
     }
 }
