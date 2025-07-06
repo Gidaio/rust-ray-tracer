@@ -101,8 +101,11 @@ impl Camera {
         if depth <= 0 {
             Color::new(0.0, 0.0, 0.0)
         } else if let Some(hit_record) = world.hit(ray, 0.001..=f64::INFINITY) {
-            let direction = hit_record.normal + Vector3::random_unit();
-            0.5 * Self::ray_color(&Ray::new(hit_record.point, direction), depth - 1, world)
+            if let Some((attenuation, scattered)) = hit_record.material.scatter(ray, &hit_record) {
+                attenuation * Self::ray_color(&scattered, depth - 1, world)
+            } else {
+                Color::new(0.0, 0.0, 0.0)
+            }
         } else {
             let unit_direction = ray.direction.unit_vector();
             let a = 0.5 * (unit_direction.y() + 1.0);

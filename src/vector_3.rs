@@ -48,6 +48,10 @@ impl Vector3 {
         }
     }
 
+    pub fn reflect(&self, normal: Vector3) -> Vector3 {
+        *self - 2.0 * self.dot(normal) * normal
+    }
+
     pub fn x(&self) -> f64 {
         self[0]
     }
@@ -78,6 +82,11 @@ impl Vector3 {
 
     pub fn length_squared(&self) -> f64 {
         self[0] * self[0] + self[1] * self[1] + self[2] * self[2]
+    }
+
+    pub fn near_zero(&self) -> bool {
+        let epsilon = 1.0e-8;
+        self[0].abs() < epsilon && self[1].abs() < epsilon && self[2].abs() < epsilon
     }
 
     pub fn dot(self, rhs: Vector3) -> f64 {

@@ -5,9 +5,9 @@ use crate::{
     ray::Ray,
 };
 
-pub struct HittableList(Vec<Box<dyn Hittable>>);
+pub struct HittableList<'a>(Vec<Box<(dyn Hittable + 'a)>>);
 
-impl HittableList {
+impl<'a> HittableList<'a> {
     pub fn new() -> Self {
         HittableList(Vec::new())
     }
@@ -16,12 +16,12 @@ impl HittableList {
         self.0.clear();
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
+    pub fn add(&mut self, object: Box<dyn Hittable + 'a>) {
         self.0.push(object);
     }
 }
 
-impl Hittable for HittableList {
+impl<'a> Hittable for HittableList<'a> {
     fn hit(&self, ray: &Ray, ray_t: RangeInclusive<f64>) -> Option<HitRecord> {
         let mut closest_record = None;
         let mut closest_t = *ray_t.end();

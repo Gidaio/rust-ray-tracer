@@ -2,25 +2,28 @@ use std::ops::RangeInclusive;
 
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     ray::Ray,
     vector_3::Point3,
 };
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Point3,
     radius: f64,
+    material: &'a dyn Material,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
+impl<'a> Sphere<'a> {
+    pub fn new(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
         Self {
             center,
             radius: radius.max(0.0),
+            material,
         }
     }
 }
 
-impl Hittable for Sphere {
+impl<'a> Hittable for Sphere<'a> {
     fn hit(&self, ray: &Ray, ray_t: RangeInclusive<f64>) -> Option<HitRecord> {
         let oc = self.center - ray.origin;
         let a = ray.direction.length_squared();
@@ -47,6 +50,7 @@ impl Hittable for Sphere {
         let mut hit_record = HitRecord {
             point: hit_point,
             normal: (hit_point - self.center) / self.radius,
+            material: self.material,
             t: root,
             front_face: false,
         };
