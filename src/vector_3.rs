@@ -48,6 +48,20 @@ impl Vector3 {
         }
     }
 
+    pub fn random_in_unit_disc() -> Self {
+        loop {
+            let p = Self::new(
+                rand::random_range(-1.0..1.0),
+                rand::random_range(-1.0..1.0),
+                0.0,
+            );
+
+            if p.length_squared() < 1.0 {
+                break p;
+            }
+        }
+    }
+
     pub fn reflect(&self, normal: Self) -> Self {
         *self - 2.0 * self.dot(normal) * normal
     }

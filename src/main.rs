@@ -64,6 +64,9 @@ fn main() {
     camera.look_at = Point3::new(0.0, 0.0, -1.0);
     camera.view_up = Vector3::new(0.0, 1.0, 0.0);
 
+    camera.defocus_angle = 10.0;
+    camera.focus_distance = 3.4;
+
     let img = camera.render(&world);
 
     img.save_with_format("out.png", ImageFormat::Png).unwrap();
