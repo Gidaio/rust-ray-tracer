@@ -1,3 +1,5 @@
+use std::f64;
+
 use image::{ImageBuffer, Rgb};
 
 use crate::{
@@ -12,6 +14,10 @@ pub struct Camera {
     pub image_width: u32,
     pub samples_per_pixel: u32,
     pub max_depth: usize,
+    pub vertical_fov: f64,
+    pub look_from: Point3,
+    pub look_at: Point3,
+    pub view_up: Vector3,
 
     image_height: u32,
     pixel_samples_scale: f64,
@@ -19,6 +25,9 @@ pub struct Camera {
     upper_left_pixel_center: Point3,
     pixel_delta_u: Vector3,
     pixel_delta_v: Vector3,
+    camera_right: Vector3,
+    camera_up: Vector3,
+    camera_backward: Vector3,
 }
 
 impl Camera {
@@ -57,23 +66,28 @@ impl Camera {
         let actual_aspect_ratio = self.image_width as f64 / self.image_height as f64;
 
         // Camera Stuff
-        let focal_length = 1.0;
-        self.center = Point3::new(0.0, 0.0, 0.0);
+        self.center = self.look_from;
+
+        let focal_length = (self.look_from - self.look_at).length();
+        let theta = self.vertical_fov * f64::consts::PI / 180.0;
+        let h = (theta / 2.0).tan();
 
         // Viewport Stuff
-        let viewport_height = 2.0;
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * actual_aspect_ratio;
 
-        let viewport_u = Vector3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vector3::new(0.0, -viewport_height, 0.0);
+        self.camera_backward = (self.look_from - self.look_at).unit_vector();
+        self.camera_right = self.view_up.cross(self.camera_backward).unit_vector();
+        self.camera_up = self.camera_backward.cross(self.camera_right);
+
+        let viewport_u = viewport_width * self.camera_right;
+        let viewport_v = viewport_height * -self.camera_up;
 
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
 
-        let viewport_upper_left = self.center
-            - Vector3::new(0.0, 0.0, focal_length)
-            - viewport_u / 2.0
-            - viewport_v / 2.0;
+        let viewport_upper_left =
+            self.center - focal_length * self.camera_backward - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.upper_left_pixel_center =
             viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);

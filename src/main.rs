@@ -11,7 +11,7 @@ use hittable_list::HittableList;
 use image::ImageFormat;
 use material::{Dielectric, Lambertian, Metal};
 use sphere::Sphere;
-use vector_3::{Color, Point3};
+use vector_3::{Color, Point3, Vector3};
 
 fn main() {
     // World
@@ -58,6 +58,11 @@ fn main() {
     camera.image_width = 400;
     camera.samples_per_pixel = 100;
     camera.max_depth = 50;
+
+    camera.vertical_fov = 20.0;
+    camera.look_from = Point3::new(-2.0, 2.0, 1.0);
+    camera.look_at = Point3::new(0.0, 0.0, -1.0);
+    camera.view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let img = camera.render(&world);
 
