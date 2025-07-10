@@ -55,16 +55,16 @@ fn main() {
 
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
-    camera.image_width = 400;
-    camera.samples_per_pixel = 100;
-    camera.max_depth = 50;
+    camera.image_width = 1920;
+    camera.samples_per_pixel = 500;
+    camera.max_depth = 100;
 
-    camera.vertical_fov = 20.0;
+    camera.vertical_fov = 25.0;
     camera.look_from = Point3::new(-2.0, 2.0, 1.0);
     camera.look_at = Point3::new(0.0, 0.0, -1.0);
     camera.view_up = Vector3::new(0.0, 1.0, 0.0);
 
-    camera.defocus_angle = 10.0;
+    camera.defocus_angle = 5.0;
     camera.focus_distance = 3.4;
 
     let img = camera.render(&world);

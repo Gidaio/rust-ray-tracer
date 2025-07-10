@@ -48,7 +48,7 @@ impl Camera {
 
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    pixel_color += Self::ray_color(&ray, self.max_depth, world);
+                    pixel_color += ray_color(&ray, self.max_depth, world);
                 }
 
                 *pixel = (pixel_color * self.pixel_samples_scale).into();
@@ -102,7 +102,7 @@ impl Camera {
     }
 
     fn get_ray(&self, x: u32, y: u32) -> Ray {
-        let offset = Self::sample_square();
+        let offset = sample_square();
 
         let pixel_sample = self.upper_left_pixel_center
             + ((x as f64 + offset.x()) * self.pixel_delta_u)
@@ -117,32 +117,32 @@ impl Camera {
         Ray::new(origin, pixel_sample - origin)
     }
 
-    fn sample_square() -> Vector3 {
-        Vector3::new(
-            rand::random::<f64>() - 0.5,
-            rand::random::<f64>() - 0.5,
-            0.0,
-        )
-    }
-
     fn defocus_disk_sample(&self) -> Point3 {
         let p = Vector3::random_in_unit_disc();
         self.center + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
+}
 
-    fn ray_color(ray: &Ray, depth: usize, world: &impl Hittable) -> Color {
-        if depth == 0 {
-            Color::new(0.0, 0.0, 0.0)
-        } else if let Some(hit_record) = world.hit(ray, 0.001..=f64::INFINITY) {
-            if let Some((attenuation, scattered)) = hit_record.material.scatter(ray, &hit_record) {
-                attenuation * Self::ray_color(&scattered, depth - 1, world)
-            } else {
-                Color::new(0.0, 0.0, 0.0)
-            }
+fn sample_square() -> Vector3 {
+    Vector3::new(
+        rand::random::<f64>() - 0.5,
+        rand::random::<f64>() - 0.5,
+        0.0,
+    )
+}
+
+fn ray_color(ray: &Ray, depth: usize, world: &impl Hittable) -> Color {
+    if depth == 0 {
+        Color::new(0.0, 0.0, 0.0)
+    } else if let Some(hit_record) = world.hit(ray, 0.001..=f64::INFINITY) {
+        if let Some((attenuation, scattered)) = hit_record.material.scatter(ray, &hit_record) {
+            attenuation * ray_color(&scattered, depth - 1, world)
         } else {
-            let unit_direction = ray.direction.unit_vector();
-            let a = 0.5 * (unit_direction.y() + 1.0);
-            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+            Color::new(0.0, 0.0, 0.0)
         }
+    } else {
+        let unit_direction = ray.direction.unit_vector();
+        let a = 0.5 * (unit_direction.y() + 1.0);
+        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
 }

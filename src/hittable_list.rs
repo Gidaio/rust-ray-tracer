@@ -12,10 +12,6 @@ impl<'a> HittableList<'a> {
         HittableList(Vec::new())
     }
 
-    pub fn clear(&mut self) {
-        self.0.clear();
-    }
-
     pub fn add(&mut self, object: Box<dyn Hittable + 'a>) {
         self.0.push(object);
     }
